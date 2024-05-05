@@ -1,6 +1,8 @@
 // On attend le chargement de la page HTML
 document.addEventListener("DOMContentLoaded", async function () {
-    let identifiantLocalStorage = 'mots';
+    let identifiantMotsLocalStorage = 'mots';
+    let identifiantDateLocalStorage = 'date';
+    let identifiantDureeAttenteLocalStorage = 'delai';
     let mots;
     let motsATrouver;
     let nombreDeMots = document.getElementById('words-number').value;
@@ -13,16 +15,23 @@ document.addEventListener("DOMContentLoaded", async function () {
     // On génère un nombre de mots par défaut (3) pour une prochaine manche
     await genererMotsAMemoriser();
     // Si on récupère une variable stockée côté client, correspondant au site
-    if (localStorage.getItem(identifiantLocalStorage)) {
+    if (localStorage.getItem(identifiantMotsLocalStorage)) {
         // On récupère la liste des mots
-        motsATrouver = JSON.parse(localStorage.getItem(identifiantLocalStorage));
+        motsATrouver = JSON.parse(localStorage.getItem(identifiantMotsLocalStorage));
         // On actualise le nombre de mots à trouver
         nombreDeMotsATrouver = motsATrouver.length;
-        // Affichage du titre
-        titreMotsATrouver.style.display = 'block';
         // Génération des blocs dédiés à saisir les mots qui devaient être mémorisés
         genererMotsATrouver();
     }
+    // Lorsque l'utilisatuer veut modifier la durée du délai à attendre avant de tester sa mémoire
+    document.getElementById('words-delay').addEventListener('change', function() {
+        // On actualise la variable dédiée
+        document.getElementById('words-delay-counter').textContent = this.value;
+        // On stocke la date courante
+        localStorage.setItem(identifiantDateLocalStorage, new Date().getTime().toString());
+        // On stocke le délai sélectionné
+        localStorage.setItem(identifiantDureeAttenteLocalStorage, this.value);
+    });
     // Lorsque l'utilisatuer veut modifier le nombre de mots à mémoriser
     document.getElementById('words-number').addEventListener('change', function() {
         // On actualise la variable dédiée
@@ -42,17 +51,19 @@ document.addEventListener("DOMContentLoaded", async function () {
         // ON actualise le nombre de mots trouvés
         nombreDeMotsTrouves = 0;
         // On stocke côté client la liste de mots à mémoriser
-        localStorage.setItem(identifiantLocalStorage, JSON.stringify(mots));
+        localStorage.setItem(identifiantMotsLocalStorage, JSON.stringify(mots));
+        // On stocke la date courante
+        localStorage.setItem(identifiantDateLocalStorage, new Date().getTime().toString());
+        // On stocke le délai sélectionné
+        localStorage.setItem(identifiantDureeAttenteLocalStorage, document.getElementById('words-delay').value);
         // Si le stockage s'est bien effectué
-        if (localStorage.getItem(identifiantLocalStorage)) {
+        if (localStorage.getItem(identifiantMotsLocalStorage)) {
             // On récupère la liste des mots
-            motsATrouver = JSON.parse(localStorage.getItem(identifiantLocalStorage));
+            motsATrouver = JSON.parse(localStorage.getItem(identifiantMotsLocalStorage));
             // On actualise le nombre de mots à trouver
             nombreDeMotsATrouver = motsATrouver.length;
             // Génération d'une notification dans le centre de notifications et en toast pour prévenir l'utilisateur
             genererNotification('success', 'fa-regular fa-floppy-disk', 'Les mots sont bien sauvegardés pour votre prochaine visite!<br><br>Faites attention à ne pas supprimer vos données de ce site sur votre navigateur, cela supprimera les mots à trouver!', 'Sauvegarde des mots', true);
-            // Affichage du titre
-            titreMotsATrouver.style.display = 'block';
             // Génération des blocs dédiés à saisir les mots qui devaient être mémorisés
             genererMotsATrouver();
             // Génération de nouveaux mots pour ne pas avoir les réponses sous les yeux
@@ -143,6 +154,47 @@ document.addEventListener("DOMContentLoaded", async function () {
     });
 
     /**
+     * Permet de savoir si le délai a été respecté pour afficher le module Retrouvez des mots.
+     *
+     * @returns {boolean}
+     */
+    function afficherModuleMotARetrouver() {
+        // On vérifie que l'on a en localstorage le delai et la date à laquelle l'utilisateur a généré les mots
+        if (localStorage.getItem(identifiantDateLocalStorage)
+            && localStorage.getItem(identifiantDureeAttenteLocalStorage)) {
+            // On récupère la date courante
+            let dateCourante = new Date().getTime();
+            // On calcule la différence de temps entre les deux dates
+            let difference = dateCourante - parseInt(localStorage.getItem(identifiantDateLocalStorage));
+            // On calcule la différence en heures
+            let differenceEnHeures = difference / (1000 * 60 * 60);
+            // Si la différence en heure est supérieure ou égale au délai indiqué par l'utilisateur
+            if (differenceEnHeures >= parseInt(localStorage.getItem(identifiantDureeAttenteLocalStorage))) {
+                // Affichage du titre
+                titreMotsATrouver.style.display = 'block';
+                // Génération d'une notification dans le centre de notifications
+                genererNotification('success', 'fa-regular fa-clock', 'Vous pouvez à présent tester votre mémoire!', 'Application', true);
+                // On retourne true
+                return true;
+            } else {
+                // Retrait du titre
+                titreMotsATrouver.style.display = 'none';
+                // Génération d'une notification dans le centre de notifications + toast
+                genererNotification('warning', 'fa-regular fa-clock', 'Il est encore trop tôt pour tester votre mémoire! Il s\'est écoulé ' + differenceEnHeures.toFixed(2) + ' heure(s) et vous avez mis un délai de ' + localStorage.getItem(identifiantDureeAttenteLocalStorage) + ' heure(s).', 'Application', true);
+                // On retourne false
+                return false;
+            }
+        } else {
+            // Retrait du titre
+            titreMotsATrouver.style.display = 'none';
+            // Génération d'une notification dans le centre de notifications
+            genererNotification('danger', 'fa-solid fa-server', 'Pas assez d\'informations pour afficher le mot "Retrouve mots"!', 'Application');
+            // On retourne false
+            return false;
+        }
+    }
+
+    /**
      * Génération des mots à mémoriser.
      * Les mots générés via l'API trouve mot: https://trouve-mot.fr/
      * Les définitions des mots devrait être générées via une API dictionnaire (à venir)
@@ -191,26 +243,29 @@ document.addEventListener("DOMContentLoaded", async function () {
         try {
             // Suppression du contenu de l'élément HTML qui contiendra toutes les cards des mots à retrouver
             document.getElementById('words-guess-cards').innerHTML = "";
-            // Parcourt de l'ensemble des mots à retrouver
-            mots.forEach((mot, indice) => {
-                document.getElementById('words-guess-cards').insertAdjacentHTML("beforeend",
-                    '<div class="col-4 p-1">\n' +
-                    '    <div class="card text-center">\n' +
-                    '        <div class="card-header">\n' +
-                    '            <h5>Mot <i class="fa-solid fa-hashtag"></i>' + (indice+1) + '</h5>\n' +
-                    '        </div>' +
-                    '        <div class="card-body">\n' +
-                    '            <div class="form-floating mb-2">\n' +
-                    '                <input class="form-control" id="word-guess-' + indice + '" placeholder="Mot #' + (indice+1) + '" type="text">\n' +
-                    '                <label for="word-guess-' + indice + '">Quel était donc ce mot ?</label>\n' +
-                    '            </div>' +
-                    '            <a class="btn btn-outline-dark col-10" href="#' + indice + '" id="word-button-' + indice + '" role="button"><i class="fa-solid fa-magnifying-glass"></i> Vérifier le mot</a>\n' +
-                    '        </div>\n' +
-                    '    </div>\n' +
-                    '</div>');
-            });
-            // Génération d'une notification dans le centre de notifications
-            genererNotification('info', 'fa-solid fa-server', 'Module "Retrouvez vos mots" généré avec succès!', 'Application');
+            // On s'assure que l'on puisse générer le module
+            if (afficherModuleMotARetrouver()) {
+                // Parcourt de l'ensemble des mots à retrouver
+                motsATrouver.forEach((mot, indice) => {
+                    document.getElementById('words-guess-cards').insertAdjacentHTML("beforeend",
+                        '<div class="col-4 p-1">\n' +
+                        '    <div class="card text-center">\n' +
+                        '        <div class="card-header">\n' +
+                        '            <h5>Mot <i class="fa-solid fa-hashtag"></i>' + (indice+1) + '</h5>\n' +
+                        '        </div>' +
+                        '        <div class="card-body">\n' +
+                        '            <div class="form-floating mb-2">\n' +
+                        '                <input class="form-control" id="word-guess-' + indice + '" placeholder="Mot #' + (indice+1) + '" type="text">\n' +
+                        '                <label for="word-guess-' + indice + '">Quel était donc ce mot ?</label>\n' +
+                        '            </div>' +
+                        '            <a class="btn btn-outline-dark col-10" href="#' + indice + '" id="word-button-' + indice + '" role="button"><i class="fa-solid fa-magnifying-glass"></i> Vérifier le mot</a>\n' +
+                        '        </div>\n' +
+                        '    </div>\n' +
+                        '</div>');
+                });
+                // Génération d'une notification dans le centre de notifications
+                genererNotification('info', 'fa-solid fa-server', 'Module "Retrouvez vos mots" généré avec succès!', 'Application');
+            }
         } catch (error) {
             // Génération d'une notification dans le centre de notifications et en toast pour prévenir l'utilisateur
             genererNotification('danger', 'fa-solid fa-server', 'Un problème technique est survenu lors de la génération du module "Retrouvez vos mots"! Erreur: ' + error.message, 'Application', true);

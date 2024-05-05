@@ -72,6 +72,13 @@
             <!-- Input permettant de gérer le nombre de mots à générer -->
             <div class="col-10 m-1 mx-auto row">
                 <label class="form-label" for="words-number">
+                    <i class="fa-regular fa-clock"></i> Durée après laquelle vous souhaitez tester votre mémoire, en heure <span class="badge text-bg-primary" id="words-delay-counter">24</span>
+                </label>
+                <input class="form-range" id="words-delay" max="168" min="1" step="1" type="range" value="24">
+            </div>
+            <!-- Input permettant de gérer le nombre de mots à générer -->
+            <div class="col-10 m-1 mx-auto row">
+                <label class="form-label" for="words-number">
                     <i class="fa-regular fa-note-sticky"></i> Nombre de mots à mémoriser <span class="badge text-bg-primary" id="words-number-counter">3</span>
                 </label>
                 <input class="form-range" id="words-number" max="9" min="1" step="1" type="range" value="3">

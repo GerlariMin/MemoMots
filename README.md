@@ -42,7 +42,8 @@
 - [x] Module de saisie des mots mémorisés
 - [x] Gestion de la saisie
 - [x] Système de notifications
-- [ ] Limiter le stockage client à 24h
+- [x] Limiter le stockage client à 24h
+- [x] Gestion du délai de stockage modifiable par l'utilisateur, entre 1h et 168h (7j)
 - [ ] Proposer les définition des mots (en attente d'API)
 
 ## [Changelog](https://github.com/GerlariMin/MemoMots/blob/main/CHANGELOG.md)

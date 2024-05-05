@@ -1,6 +1,21 @@
 # Changelog
 
-## 1.0.0 (04/05/2024)
+## [1.1.0 (05/05/2024)](https://github.com/GerlariMin/MemoMots/tree/1.1.0)
+
+_Gestion du délai et correction mineure_
+
+### Foncationnalités
+
+#### Corrections
+
+- Gestion des mots pour la génération du bloc "Retrouvez vos mots" dû à l'usage d'une mauvaise variable
+
+#### Ajouts
+
+- Gestion du délai à attendre avant de pouvoir afficher le module "Retrouve mots" à l'utilisateur
+- Paramètrage du délai d'attente par l'utilisateur
+
+## [1.0.0 (04/05/2024)](https://github.com/GerlariMin/MemoMots/tree/1.0.0)
 
 _Première version_
 
@@ -20,4 +35,4 @@ _Première version_
 
 ### API
 
-- [Trouve-mot](https://trouve-mot.fr/) pour la génération de mots aléatoire.
+- [Trouve-mot](https://trouve-mot.fr/) pour la génération de mots aléatoire
