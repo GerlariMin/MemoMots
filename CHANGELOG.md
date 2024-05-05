@@ -13,7 +13,7 @@ _Gestion du délai et correction mineure_
 #### Ajouts
 
 - Gestion du délai à attendre avant de pouvoir afficher le module "Retrouve mots" à l'utilisateur
-- Paramètrage du délai d'attente par l'utilisateur
+- Paramétrage du délai d'attente par l'utilisateur
 
 ## [1.0.0 (04/05/2024)](https://github.com/GerlariMin/MemoMots/tree/1.0.0)
 
